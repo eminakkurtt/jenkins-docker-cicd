@@ -5,14 +5,48 @@ Bu proje, bir Java web uygulamasının GitHub'dan Azure üzerindeki Docker conta
 ## Mimari
 
 ```mermaid
-flowchart LR
-    A[👨‍💻 Developer\nLocal Machine] -->|git push| B[GitHub\nRepository]
-    B -->|Poll SCM\nher dakika| C[Jenkins\nAzure VM]
-    C -->|Maven\nclean install| D[webapp.war\nArtifact]
-    D -->|Publish Over SSH| E[Docker Host\nAzure VM]
-    E -->|docker build| F[Docker Image\nregapp:v1]
-    F -->|docker run| G[🐳 Docker Container\nTomcat:8087]
-    G -->|HTTP| H[🌐 Web App\n/webapp/]
+flowchart TD
+    DEV["👨‍💻 Developer"]:::dev
+
+    subgraph LOCAL["🖥️ Local Machine"]
+        CODE["📁 Source Code\n(Java + pom.xml)"]
+    end
+
+    subgraph GITHUB["🐙 GitHub"]
+        REPO["📦 jenkins-docker-cicd\nrepository"]
+    end
+
+    subgraph AZURE["☁️ Azure Virtual Machine"]
+        direction TB
+        subgraph JENKINS["🔧 Jenkins"]
+            POLL["Poll SCM\n(every minute)"]
+            MAVEN["Maven Build\nclean install"]
+            WAR["📄 webapp.war"]
+            SSH["Publish Over SSH"]
+        end
+
+        subgraph DOCKER["🐳 Docker"]
+            BUILD["docker build\nregapp:v1"]
+            RUN["docker run\nregisterapp"]
+            APP["🌐 Web App\nport 8087"]
+        end
+    end
+
+    BROWSER["🌍 Browser\nhttp://IP:8087/webapp/"]:::browser
+
+    DEV -->|git push| CODE
+    CODE -->|push| REPO
+    REPO -->|trigger| POLL
+    POLL --> MAVEN
+    MAVEN --> WAR
+    WAR --> SSH
+    SSH --> BUILD
+    BUILD --> RUN
+    RUN --> APP
+    APP --> BROWSER
+
+    classDef dev fill:#4A90D9,stroke:#2C5F8A,color:#fff
+    classDef browser fill:#27AE60,stroke:#1A7A42,color:#fff
 ```
 
 ## Kullanılan Teknolojiler
